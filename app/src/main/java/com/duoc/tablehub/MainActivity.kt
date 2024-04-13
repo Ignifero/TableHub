@@ -1,7 +1,5 @@
 package com.duoc.tablehub
 
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -20,10 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -69,9 +64,6 @@ fun InicioLogin(navController: NavController){
     var mail by remember { mutableStateOf("") }
     var pswd by remember { mutableStateOf("") }
     val contexto = LocalContext.current
-    val gradientDrawable = GradientDrawable()
-    gradientDrawable.colors = intArrayOf(Color.WHITE, Color.BLACK)
-    gradientDrawable.cornerRadius = 10f
 
     Box (
         modifier = Modifier
