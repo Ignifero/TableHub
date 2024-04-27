@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,12 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -56,6 +57,7 @@ fun MiAplicacion(){
     NavHost(navController = navController, startDestination = "inicioLogin") {
         composable("inicioLogin"){ InicioLogin(navController = navController)}
         composable("home"){ Home(navController = navController)}
+        composable("signup"){ SignUp(navController = navController)}
     }
 }
 
@@ -71,8 +73,8 @@ fun InicioLogin(navController: NavController){
             .background(
                 brush = Brush.verticalGradient(
                     listOf(
-                        androidx.compose.ui.graphics.Color.White,
-                        androidx.compose.ui.graphics.Color.Black
+                        Color.White,
+                        Color.Black
                     )
                 )
             )
@@ -85,7 +87,7 @@ fun InicioLogin(navController: NavController){
                 .padding(16.dp)
         ){
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.newlogo),
                 contentDescription = "logo",
                 modifier = Modifier.size(300.dp)
             )
@@ -93,7 +95,7 @@ fun InicioLogin(navController: NavController){
             OutlinedTextField(
                 value = mail,
                 onValueChange = {mail = it},
-                label = {Text("Correo Electrónico", color = androidx.compose.ui.graphics.Color.White)},
+                label = {Text("Correo Electrónico", color = Color.White)},
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
@@ -102,7 +104,7 @@ fun InicioLogin(navController: NavController){
             OutlinedTextField(
                 value = pswd,
                 onValueChange = {pswd = it},
-                label = {Text("Contraseña", color = androidx.compose.ui.graphics.Color.White)},
+                label = {Text("Contraseña", color = Color.White)},
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -126,35 +128,24 @@ fun InicioLogin(navController: NavController){
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .background(color = androidx.compose.ui.graphics.Color.Red),
+                    .background(color = Color.Red),
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = androidx.compose.ui.graphics.Color.Red,
-                    contentColor = androidx.compose.ui.graphics.Color.White
+                    containerColor = Color.Red,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Ingresar")
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Crear nueva cuenta", color = androidx.compose.ui.graphics.Color.Blue)
+            Text(
+                "Crear nueva cuenta",
+                color = Color.Blue,
+                modifier = Modifier.clickable { navController.navigate("signup") }
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text("¿Olvidó su contraseña?", color = androidx.compose.ui.graphics.Color.Blue)
+            Text("¿Olvidó su contraseña?", color = Color.Blue)
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TableHubTheme {
-        Greeting("Android")
-    }
-}

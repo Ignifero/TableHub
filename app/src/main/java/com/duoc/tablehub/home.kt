@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -52,12 +51,10 @@ fun Home(navController: NavController){
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier = Modifier.fillMaxSize().padding(16.dp)
                 ){
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = R.drawable.newlogo),
                         contentDescription = "Logo",
                         modifier = Modifier.size(200.dp)
                     )
@@ -110,19 +107,20 @@ fun CustomBottomBar(navController: NavController){
         modifier = Modifier
             .fillMaxWidth()
             .height(55.dp),
-        color = MaterialTheme.colorScheme.primary
+        color = Color.LightGray
     ){
 
     }
     Row (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(5.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ){
         IconButton(
             onClick = {navController.navigateUp()},
             colors = IconButtonDefaults.iconButtonColors(containerColor = Color.DarkGray)
+
         ) {
             Icon(Icons.Filled.Home, contentDescription = null, tint = Color.White)
         }
