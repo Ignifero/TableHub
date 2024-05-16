@@ -23,6 +23,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +38,82 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.duoc.tablehub.ui.theme.TableHubTheme
+import com.duoc.tablehub.models.Login
+import com.duoc.tablehub.models.NuevoUsuario
+import com.duoc.tablehub.utils.RetrofitInstance
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
+class MainViewModel : ViewModel() {
+    val isLoading = mutableStateOf(false)
+    private val _userCreationResult = MutableStateFlow<UserCreationResult?>(null)
+    val userCreationResult =_userCreationResult.asStateFlow()
+
+    fun Ingresar(mail: String, pass: String) {
+        val usuario : Login
+        usuario = Login(mail, pass)
+
+        viewModelScope.launch {
+            isLoading.value = true
+            val response = RetrofitInstance.api.usuarioLogin(usuario)
+
+            if (response.isSuccessful) {
+                val respuesta = response.body()?.get(0)?.RESPUESTA
+                _userCreationResult.value = UserCreationResult.Success(respuesta)
+                println("${UserCreationResult.Success(respuesta)}")
+            } else {
+                println("RESPUESTA ERROR")
+                _userCreationResult.value = UserCreationResult.Error("Error al ingresar")
+            }
+
+            isLoading.value = false
+            resetUserCreationResult()
+        }
+    }
+
+    fun CrearUsuario(mail: String, pass: String, nombre: String, apellido: String) {
+        val usuario : NuevoUsuario
+        usuario = NuevoUsuario(mail, pass, nombre, apellido)
+
+        viewModelScope.launch {
+            isLoading.value = true
+            val response = RetrofitInstance.api.usuarioAlmacenar(usuario)
+
+            if (response.isSuccessful) {
+                val respuesta = response.body()?.get(0)?.RESPUESTA
+                _userCreationResult.value = UserCreationResult.Success(respuesta)
+                println("${_userCreationResult.value}")
+            } else {
+                println("RESPUESTA ERROR")
+                _userCreationResult.value = UserCreationResult.Error("Error al crear usuario")
+            }
+
+            isLoading.value = false
+            resetUserCreationResult()
+        }
+    }
+
+    fun resetUserCreationResult() {
+        viewModelScope.launch {
+            delay(1000)
+            _userCreationResult.value = null
+        }
+    }
+
+    sealed class UserCreationResult {
+        data class Success(val data: Any?): UserCreationResult()
+        data class Error(val message: String): UserCreationResult()
+    }
+}
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +138,34 @@ fun InicioLogin(navController: NavController){
     var mail by remember { mutableStateOf("") }
     var pswd by remember { mutableStateOf("") }
     val contexto = LocalContext.current
+    val viewModel: MainViewModel = viewModel()
+    val userCreationResult by viewModel.userCreationResult.collectAsState()
+
+    LaunchedEffect(userCreationResult) {
+        when (val result = userCreationResult) {
+            is MainViewModel.UserCreationResult.Success -> {
+                val respuesta = result.data as String
+
+                if (respuesta == "LOGIN OK"){
+                    println("WAR: LOGIN OK")
+                    Toast.makeText(
+                        contexto, "Bienvenido $mail", Toast.LENGTH_LONG
+                    ).show()
+                    navController.navigate("home")
+                } else {
+                    Toast.makeText(
+                        contexto, "Credenciales Inválidas", Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            is MainViewModel.UserCreationResult.Error -> {
+                Toast.makeText(
+                    contexto, result.message, Toast.LENGTH_LONG
+                ).show()
+            }
+            else -> Unit
+        }
+    }
 
     Box (
         modifier = Modifier
@@ -115,15 +215,7 @@ fun InicioLogin(navController: NavController){
                 println("WAR: MAIL: $mail")
                 println("WAR: PASS: $pswd")
 
-                if (mail == "warhammer" && pswd == "40000"){
-                    navController.navigate("home")
-                } else {
-                    Toast.makeText(
-                        contexto,
-                        "Credenciales Inválidas",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                viewModel.Ingresar(mail, pswd)
             },
                 modifier = Modifier
                     .fillMaxWidth()
