@@ -9,6 +9,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("route/usuario_duoc_almacenar")
@@ -20,6 +21,7 @@ interface ApiService {
     @POST("route/producto_duoc_almacenar")
     suspend fun productoAlmacenar(@Body producto: Producto):Response<List<Respuesta>>
 
-    @GET("route/producto_duoc_obtener_x_mail?mail={correo}")
-    suspend fun productoObtener(@Path("correo") correo:String):Response<List<Respuesta>>
+    @GET("route/producto_duoc_obtener_x_mail")
+    suspend fun productoObtener(@Query("mail") correo: String): Response<List<Any>>
+
 }

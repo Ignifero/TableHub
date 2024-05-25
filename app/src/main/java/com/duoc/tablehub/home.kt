@@ -16,23 +16,44 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun Home(navController: NavController){
+fun Home(navController: NavController, mail: String){
+    val viewModel : MainViewModel = viewModel()
+    val userCreationResult by viewModel.userCreationResult.collectAsState()
+    var premiumFlag = false
+    var subs = ""
+
+    LaunchedEffect(userCreationResult) {
+        viewModel.BuscarPlan(mail)
+    }
+
+    if (viewModel.planObtenido.isNotEmpty()) {
+        premiumFlag = true
+        subs = viewModel.planObtenido.get(0).nombre
+    }
+
     Scaffold (
         bottomBar = { CustomBottomBar(navController = navController) },
         content = { innerPadding ->
@@ -51,8 +72,30 @@ fun Home(navController: NavController){
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top,
-                    modifier = Modifier.fillMaxSize().padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ){
+                    Column (horizontalAlignment = Alignment.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ){
+                        Button(
+                            onClick = {
+                                      if (!premiumFlag) {
+                                          navController.navigate("seleccionPlan/${mail}")
+                                      }
+                                      },
+                            enabled = !premiumFlag,
+                            modifier = Modifier
+                                .padding(5.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                disabledContainerColor = Color.Black,
+                                disabledContentColor = Color.White
+                            )
+                        ) {
+                            Text(if (premiumFlag) "Ya es $subs" else "Hazte premium!")
+                        }
+                    }
                     Image(
                         painter = painterResource(id = R.drawable.newlogo),
                         contentDescription = "Logo",
@@ -62,36 +105,36 @@ fun Home(navController: NavController){
                         Image(painter = painterResource(id = R.drawable.armageddon), contentDescription = "",
                             modifier = Modifier
                                 .padding(5.dp)
-                                .size(150.dp))
+                                .size(125.dp))
                         Column {
                             Image(painter = painterResource(id = R.drawable.storm), contentDescription = "",
                                 modifier = Modifier
                                     .padding(5.dp)
-                                    .size(150.dp))
+                                    .size(125.dp))
                         }
                     }
                     Row (modifier = Modifier.padding(5.dp)){
                         Image(painter = painterResource(id = R.drawable.kill), contentDescription = "",
                             modifier = Modifier
                                 .padding(5.dp)
-                                .size(150.dp))
+                                .size(125.dp))
                         Column {
                             Image(painter = painterResource(id = R.drawable.warcry), contentDescription = "",
                                 modifier = Modifier
                                     .padding(5.dp)
-                                    .size(150.dp))
+                                    .size(125.dp))
                         }
                     }
                     Row (modifier = Modifier.padding(10.dp)){
                         Image(painter = painterResource(id = R.drawable.inquisitor), contentDescription = "",
                             modifier = Modifier
                                 .padding(5.dp)
-                                .size(150.dp))
+                                .size(125.dp))
                         Column {
                             Image(painter = painterResource(id = R.drawable.fantasy), contentDescription = "",
                                 modifier = Modifier
                                     .padding(5.dp)
-                                    .size(150.dp))
+                                    .size(125.dp))
                         }
                     }
                 }

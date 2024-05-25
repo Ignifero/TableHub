@@ -42,11 +42,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.duoc.tablehub.models.Login
 import com.duoc.tablehub.models.NuevoUsuario
+import com.duoc.tablehub.models.Producto
 import com.duoc.tablehub.utils.RetrofitInstance
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +60,9 @@ class MainViewModel : ViewModel() {
     val isLoading = mutableStateOf(false)
     private val _userCreationResult = MutableStateFlow<UserCreationResult?>(null)
     val userCreationResult =_userCreationResult.asStateFlow()
+    var producto : Any by mutableStateOf("")
+    var planObtenido by mutableStateOf<List<Producto>>(emptyList())
+
 
     fun Ingresar(mail: String, pass: String) {
         val usuario : Login
@@ -102,6 +108,61 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun CrearPlan(codigoplan: String, nombreplan: String, descripcion: String, precio: Double, mail: String) {
+        val plan : Producto
+        plan = Producto(codigoplan, nombreplan, descripcion, precio, mail)
+
+        viewModelScope.launch {
+            isLoading.value = true
+            val response = RetrofitInstance.api.productoAlmacenar(plan)
+
+            if (response.isSuccessful) {
+                val respuesta = response.body()?.get(0)?.RESPUESTA
+                _userCreationResult.value = UserCreationResult.Success(respuesta)
+                println("${_userCreationResult.value}")
+            } else {
+                println("RESPUESTA ERROR")
+                _userCreationResult.value = UserCreationResult.Error("Error al crear plan")
+            }
+
+            isLoading.value = false
+            resetUserCreationResult()
+        }
+    }
+
+    fun BuscarPlan(mail: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            val response = RetrofitInstance.api.productoObtener(mail)
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                if (responseBody != null && responseBody.size > 1) {
+                    val productosJson = responseBody[0] as List<Map<String, Any>>
+                    val productos = productosJson.map {
+                        Producto(
+                            codigo = it["p_codigo"] as String,
+                            nombre = it["p_nombre"] as String,
+                            descripcion = it["p_descripcion"] as String,
+                            precio = it["p_precio"]  as Double,
+                            mail = it["p_mail_creado"] as String
+                        )
+                    }
+                    planObtenido = productos
+                } else {
+                    println("RESPUESTA ERROR")
+                    _userCreationResult.value = UserCreationResult.Error("Error al obtener plan")
+                }
+            } else {
+                println("RESPUESTA ERROR")
+                _userCreationResult.value = UserCreationResult.Error("Error al obtener plan")
+            }
+            isLoading.value = false
+            resetUserCreationResult()
+            println("WAR: PLANES OBTENIDO: $planObtenido")
+            println("WAR: PLANES OBTENIDO: ${planObtenido.size}")
+        }
+    }
+
     fun resetUserCreationResult() {
         viewModelScope.launch {
             delay(1000)
@@ -128,8 +189,19 @@ fun MiAplicacion(){
     val navController =rememberNavController()
     NavHost(navController = navController, startDestination = "inicioLogin") {
         composable("inicioLogin"){ InicioLogin(navController = navController)}
-        composable("home"){ Home(navController = navController)}
+        composable("home/{mail}",
+            arguments = listOf(navArgument("mail"){type = NavType.StringType})
+        ){
+            val userMail = requireNotNull( it.arguments?.getString("mail"))
+            Home(navController = navController, mail = userMail)
+        }
         composable("signup"){ SignUp(navController = navController)}
+        composable("seleccionPlan/{mail}",
+            arguments = listOf(navArgument("mail"){type = NavType.StringType})
+        ){
+            val userMail = requireNotNull( it.arguments?.getString("mail"))
+            SeleccionarPlan(navController = navController, mail = userMail)
+        }
     }
 }
 
@@ -151,7 +223,7 @@ fun InicioLogin(navController: NavController){
                     Toast.makeText(
                         contexto, "Bienvenido $mail", Toast.LENGTH_LONG
                     ).show()
-                    navController.navigate("home")
+                    navController.navigate("home/${mail}")
                 } else {
                     Toast.makeText(
                         contexto, "Credenciales Inválidas", Toast.LENGTH_LONG
