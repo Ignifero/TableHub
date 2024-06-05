@@ -1,9 +1,11 @@
 package com.duoc.tablehub
 
+import android.app.Application
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +40,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -50,14 +53,21 @@ import androidx.navigation.navArgument
 import com.duoc.tablehub.models.Login
 import com.duoc.tablehub.models.NuevoUsuario
 import com.duoc.tablehub.models.Producto
+import com.duoc.tablehub.models.Usuario
+import com.duoc.tablehub.utils.AppDatabase
 import com.duoc.tablehub.utils.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val database by lazy { AppDatabase.getDatabase(application) }
+    private val usuarioDao by lazy { database.usuarioDao() }
+
     val isLoading = mutableStateOf(false)
+
     private val _userCreationResult = MutableStateFlow<UserCreationResult?>(null)
     val userCreationResult =_userCreationResult.asStateFlow()
     var producto : Any by mutableStateOf("")
@@ -163,6 +173,19 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun insertarUsuarioEnRoom(usuario: Usuario) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                usuarioDao.insertUsuario(usuario)
+                _userCreationResult.value = UserCreationResult.Success("Usuario insertado en Room con éxito")
+                println("WAR: INSERTAR USUARIO EN ROOM: OK")
+            } catch (e: Exception) {
+                _userCreationResult.value = UserCreationResult.Error("Error al insertar usuario en Room: ${e.message}")
+                println("WAR: ERROR AL INSERTAR USUARIO EN ROOM: ${e.message}")
+            }
+        }
+    }
+
     fun resetUserCreationResult() {
         viewModelScope.launch {
             delay(1000)
@@ -176,6 +199,11 @@ class MainViewModel : ViewModel() {
     }
 }
 class MainActivity : ComponentActivity() {
+
+    val viewModel: MainViewModel by viewModels {
+        SavedStateViewModelFactory(application, this, defaultArgs = intent.extras)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -186,24 +214,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MiAplicacion(){
-    val navController =rememberNavController()
+    val navController = rememberNavController()
+
     NavHost(navController = navController, startDestination = "inicioLogin") {
-        composable("inicioLogin"){ InicioLogin(navController = navController)}
+        composable("inicioLogin"){ InicioLogin(navController = navController)} // Pasar appContainer aquí
         composable("home/{mail}",
             arguments = listOf(navArgument("mail"){type = NavType.StringType})
         ){
             val userMail = requireNotNull( it.arguments?.getString("mail"))
             Home(navController = navController, mail = userMail)
         }
-        composable("signup"){ SignUp(navController = navController)}
+        composable("signup"){ SignUp(navController = navController)} // Pasar appContainer aquí
         composable("seleccionPlan/{mail}",
             arguments = listOf(navArgument("mail"){type = NavType.StringType})
         ){
             val userMail = requireNotNull( it.arguments?.getString("mail"))
-            SeleccionarPlan(navController = navController, mail = userMail)
+            SeleccionarPlan(navController = navController, mail = userMail) // Pasar appContainer aquí
         }
     }
 }
+
 
 @Composable
 fun InicioLogin(navController: NavController){

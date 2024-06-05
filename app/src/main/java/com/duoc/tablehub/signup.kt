@@ -39,9 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.duoc.tablehub.models.Usuario
+
 
 @Composable
 fun SignUp(navController: NavController){
+    var nickname by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var mail by remember { mutableStateOf("") }
@@ -126,6 +129,15 @@ fun SignUp(navController: NavController){
             }
             Spacer(modifier = Modifier.height(5.dp))
             OutlinedTextField(
+                value = nickname,
+                onValueChange = {nickname = it},
+                label = {Text("Nickname", color = Color.White)},
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            OutlinedTextField(
                 value = mail,
                 onValueChange = {mail = it},
                 label = {Text("Correo electrónico", color = Color.White)},
@@ -166,6 +178,8 @@ fun SignUp(navController: NavController){
                         contexto, "Usuario Creado", Toast.LENGTH_SHORT
                     ).show()
                     viewModel.CrearUsuario(mail, pswd, nombre, apellido)
+                    val nuevoUsuario = Usuario(mail, nickname, nombre, apellido, null) // Crear objeto Usuario para Room
+                    viewModel.insertarUsuarioEnRoom(nuevoUsuario)
                 } else {
                     Toast.makeText(
                         contexto, "Error: Las contraseñas no coinciden", Toast.LENGTH_SHORT
